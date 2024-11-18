@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sheep Detection and Counting</title>
+    <!-- Google Fonts for better typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Montserrat', sans-serif;
+            color: #333;
+            scroll-behavior: smooth;
+        }
+        header {
+            position: sticky;
+            top: 0;
+            background-color: #2e7d32;
+            padding: 20px;
+            text-align: center;
+            z-index: 1000;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        header h1 {
+            color:#fff;
+            font-size: 2rem;
+        }
+        main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #4caf50, #8bc34a);
+            padding: 50px 20px;
+            text-align: center;
+        }
+        h2 {
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            color: #fff;
+        }
+        form {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+        }
+        input[type="file"] {
+            margin-bottom: 20px;
+        }
+        button {
+            background-color: #4caf50;
+            color: #fff;
+            border: none;
+            padding: 12px 20px;
+            font-size: 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #388e3c;
+        }
+        h3 {
+            margin-top: 20px;
+            font-weight: 600;
+            color: #fff;
+        }
+        #statusText {
+            color: #ffeb3b;
+        }
+        #sheepCount {
+            color: #03a9f4;
+        }
+        footer {
+            margin-top: 40px;
+            padding: 10px;
+            background-color: #2e7d32;
+            color: #fff;
+            text-align: center;
+        }
+        /* Spinner Styles */
+        #loadingSpinner {
+            display: none;
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #4caf50;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-top: 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* Smooth scrolling for the page */
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sticky Header -->
+    <header>
+      <marquee behavior="scroll" direction="" scrollamount="30"> <h1>Sheep Detection and Counting Application</h1></marquee> 
+    </header>
+
+    <main>
+        <h2>Upload Video to Count Sheep</h2>
+        <form id="uploadForm" enctype="multipart/form-data">
+            <input type="file" name="video" accept="video/*" required>
+            <button type="submit">Upload and Process</button>
+        </form>
+
+        <h3>Status: <span id="statusText">waiting</span></h3>
+        <div id="loadingSpinner"></div>
+        <h3>Sheep Count: <span id="sheepCount">0</span></h3>
+    </main>
+
+    <footer>&copy; 2024 Sheep Detection Project</footer>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            const $loadingSpinner = $('#loadingSpinner');
+
+            $('#uploadForm').on('submit', function (e) {
+                e.preventDefault();
+                var formData = new FormData(this);
+                $('#statusText').text('processing...');
+                $('#sheepCount').text(0);
+                $loadingSpinner.show(); // Show spinner
+
+                // Start processing the uploaded video
+                $.ajax({
+                    url: '/',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function () {
+                        checkStatus();
+                    },
+                    error: function () {
+                        alert('Error uploading video!');
+                        $('#statusText').text('error');
+                        $loadingSpinner.hide(); // Hide spinner on error
+                    }
+                });
+            });
+
+            // Function to check the status of the processing
+            function checkStatus() {
+                const intervalId = setInterval(function () {
+                    $.getJSON('/status', function (data) {
+                        $('#statusText').text(data.status);
+                        $('#sheepCount').text(data.count);
+
+                        // Stop checking once processing is completed
+                        if (data.status === 'completed') {
+                            clearInterval(intervalId);
+                            $loadingSpinner.hide(); // Hide spinner when done
+                        }
+                    });
+                }, 3000);
+            }
+        });
+    </script>
+</body>
+</html>

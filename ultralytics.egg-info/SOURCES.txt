@@ -2,7 +2,6 @@ CONTRIBUTING.md
 LICENSE
 MANIFEST.in
 README.md
-README.zh-CN.md
 requirements.txt
 setup.cfg
 setup.py
